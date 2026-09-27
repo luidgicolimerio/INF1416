@@ -1,0 +1,3 @@
+# Trata todos os arquivos de teste como binários,
+# evitando a conversão de \n para \r\n
+tests/** -text
