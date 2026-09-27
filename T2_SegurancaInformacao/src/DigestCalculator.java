@@ -40,7 +40,8 @@ public class DigestCalculator {
             DigestCalculator calculator = new DigestCalculator();
             Map<String, Map<String, String>> catalogo = calculator.lerCatalogo(caminhoArqListaDigest);
             Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
-            // TODO: verificar status, imprimir e atualizar o XML
+            Map<String, Status> resultados = calculator.verificarStatus(digestsCalculados, catalogo, tipoDigest);
+            // TODO: imprimir e atualizar o XML
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
             System.exit(1);
@@ -185,48 +186,66 @@ public class DigestCalculator {
 
     /**
      * Função (ii): Verifica o status dos digests calculados.
-     * 
+     *
      * @param digestsCalculados Map com os arquivos da pasta e seus digests calculados.
-     * @param baseDeConhecimento Map representando a base (nomeArquivo -> digestEsperado).
+     * @param catalogo Map lido do XML (nomeArquivo -> (tipoDigest -> digestHex)).
+     * @param tipoDigest O tipo de digest calculado (MD5/SHA1/SHA256/SHA512).
      * @return Map com o nome do arquivo e o status final dele.
      */
-    public Map<String, Status> verificarStatus(Map<String, String> digestsCalculados, Map<String, String> baseDeConhecimento) {
+    public Map<String, Status> verificarStatus(Map<String, String> digestsCalculados,
+                                               Map<String, Map<String, String>> catalogo,
+                                               String tipoDigest) {
         Map<String, Status> resultados = new HashMap<>();
 
-        // Passo 1: Detectar colisões (Arquivos diferentes com o mesmo Hash)
-        Set<String> hashesVistos = new HashSet<>(); // Set para não permitir hashs duplicados
-        Set<String> hashesComColisao = new HashSet<>();
-        
-        for (String hash : digestsCalculados.values()) {
-            if (!hashesVistos.add(hash)) {
-                hashesComColisao.add(hash);
+        // Passo 1: Agrupar por hash os nomes de arquivo que o possuem (pasta + XML, só do tipo pedido)
+        Map<String, Set<String>> nomesPorHash = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : digestsCalculados.entrySet()) {
+            adicionarNome(nomesPorHash, entry.getValue(), entry.getKey());
+        }
+        for (Map.Entry<String, Map<String, String>> entry : catalogo.entrySet()) {
+            String hashXml = entry.getValue().get(tipoDigest);
+            if (hashXml != null) {
+                adicionarNome(nomesPorHash, hashXml, entry.getKey());
             }
         }
 
-        // Passo 2: Classificar cada arquivo comparando com a Base de Conhecimento
+        // Passo 2: Classificar cada arquivo da pasta
         for (Map.Entry<String, String> entry : digestsCalculados.entrySet()) {
             String nomeArquivo = entry.getKey();
             String hashCalculado = entry.getValue();
 
-            // A colisão tem precedência na checagem
-            if (hashesComColisao.contains(hashCalculado)) {
+            Map<String, String> digestsDoArquivo = catalogo.get(nomeArquivo);
+            String hashBase = (digestsDoArquivo == null) ? null : digestsDoArquivo.get(tipoDigest);
+
+            // A colisão tem precedência: outro nome (na pasta ou no XML) com o mesmo hash
+            if (nomesPorHash.get(hashCalculado).size() > 1) {
                 resultados.put(nomeArquivo, Status.COLISION);
-            } 
-            // Arquivo não existe na base de conhecimento
-            else if (!baseDeConhecimento.containsKey(nomeArquivo)) {
+            }
+            // Arquivo não está no XML, ou está mas sem digest do tipo pedido
+            else if (hashBase == null) {
                 resultados.put(nomeArquivo, Status.NOT_FOUND);
-            } 
-            // Arquivo existe, vamos comparar os hashes
-            else {
-                String hashBase = baseDeConhecimento.get(nomeArquivo);
-                if (hashCalculado.equalsIgnoreCase(hashBase)) {
-                    resultados.put(nomeArquivo, Status.OK);
-                } else {
-                    resultados.put(nomeArquivo, Status.NOT_OK);
-                }
+            }
+            // Arquivo tem digest do tipo pedido, vamos comparar os hashes
+            else if (hashCalculado.equals(hashBase)) {
+                resultados.put(nomeArquivo, Status.OK);
+            } else {
+                resultados.put(nomeArquivo, Status.NOT_OK);
             }
         }
 
         return resultados;
+    }
+
+    /**
+     * Função auxiliar que registra o nome de arquivo no conjunto de nomes associados ao hash.
+     */
+    private void adicionarNome(Map<String, Set<String>> nomesPorHash, String hash, String nomeArquivo) {
+        Set<String> nomes = nomesPorHash.get(hash);
+        if (nomes == null) {
+            nomes = new HashSet<>();
+            nomesPorHash.put(hash, nomes);
+        }
+        nomes.add(nomeArquivo);
     }
 }
