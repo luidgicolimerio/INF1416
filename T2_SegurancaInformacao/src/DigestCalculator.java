@@ -10,7 +10,19 @@ public class DigestCalculator {
 
     // Enum de status
     public enum Status {
-        OK, NOT_OK, NOT_FOUND, COLISION
+        OK("OK"), NOT_OK("NOT OK"), NOT_FOUND("NOT FOUND"), COLISION("COLISION");
+
+        // Texto impresso na saída (com espaço, conforme o enunciado)
+        private final String texto;
+
+        Status(String texto) {
+            this.texto = texto;
+        }
+
+        @Override
+        public String toString() {
+            return texto;
+        }
     }
 
     public DigestCalculator() {
@@ -41,7 +53,8 @@ public class DigestCalculator {
             Map<String, Map<String, String>> catalogo = calculator.lerCatalogo(caminhoArqListaDigest);
             Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
             Map<String, Status> resultados = calculator.verificarStatus(digestsCalculados, catalogo, tipoDigest);
-            // TODO: imprimir e atualizar o XML
+            calculator.imprimirResultados(digestsCalculados, resultados, tipoDigest);
+            // TODO: atualizar o XML
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
             System.exit(1);
@@ -136,7 +149,8 @@ public class DigestCalculator {
      * @return Um Map contendo o nome do arquivo como chave e o seu digest em hexadecimal como valor.
      */
     public Map<String, String> calcularDigestsDaPasta(String caminhoPasta, String tipoDigest) throws Exception {
-        Map<String, String> digestsCalculados = new HashMap<>();
+        // TreeMap para manter os arquivos ordenados por nome
+        Map<String, String> digestsCalculados = new TreeMap<>();
         File pasta = new File(caminhoPasta);
         File[] arquivos = pasta.listFiles();
 
@@ -195,7 +209,7 @@ public class DigestCalculator {
     public Map<String, Status> verificarStatus(Map<String, String> digestsCalculados,
                                                Map<String, Map<String, String>> catalogo,
                                                String tipoDigest) {
-        Map<String, Status> resultados = new HashMap<>();
+        Map<String, Status> resultados = new TreeMap<>();
 
         // Passo 1: Agrupar por hash os nomes de arquivo que o possuem (pasta + XML, só do tipo pedido)
         Map<String, Set<String>> nomesPorHash = new HashMap<>();
@@ -235,6 +249,21 @@ public class DigestCalculator {
         }
 
         return resultados;
+    }
+
+    /**
+     * Função (iii): Imprime na saída padrão uma linha por arquivo no formato
+     * Nome_Arq Tipo_Digest Digest_Hex (STATUS).
+     *
+     * @param digestsCalculados Map com os arquivos da pasta e seus digests calculados.
+     * @param resultados Map com o nome do arquivo e o seu status.
+     * @param tipoDigest O tipo de digest calculado (MD5/SHA1/SHA256/SHA512).
+     */
+    public void imprimirResultados(Map<String, String> digestsCalculados, Map<String, Status> resultados, String tipoDigest) {
+        for (Map.Entry<String, String> entry : digestsCalculados.entrySet()) {
+            String nomeArquivo = entry.getKey();
+            System.out.println(nomeArquivo + " " + tipoDigest + " " + entry.getValue() + " (" + resultados.get(nomeArquivo) + ")");
+        }
     }
 
     /**
