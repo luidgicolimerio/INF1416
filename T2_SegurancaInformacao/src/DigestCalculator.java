@@ -1,9 +1,16 @@
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.*;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class DigestCalculator {
@@ -54,7 +61,7 @@ public class DigestCalculator {
             Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
             Map<String, Status> resultados = calculator.verificarStatus(digestsCalculados, catalogo, tipoDigest);
             calculator.imprimirResultados(digestsCalculados, resultados, tipoDigest);
-            // TODO: atualizar o XML
+            calculator.atualizarCatalogo(caminhoArqListaDigest, digestsCalculados, resultados, tipoDigest);
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
             System.exit(1);
@@ -95,15 +102,7 @@ public class DigestCalculator {
     public Map<String, Map<String, String>> lerCatalogo(String caminhoArqListaDigest) throws Exception {
         // LinkedHashMap para manter a ordem do XML
         Map<String, Map<String, String>> catalogo = new LinkedHashMap<>();
-        File arquivo = new File(caminhoArqListaDigest);
-
-        // Lista com zero linhas
-        if (!arquivo.exists() || arquivo.length() == 0) {
-            return catalogo;
-        }
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        Document documento = factory.newDocumentBuilder().parse(arquivo);
+        Document documento = carregarDocumento(caminhoArqListaDigest);
 
         NodeList fileEntries = documento.getDocumentElement().getElementsByTagName("FILE_ENTRY");
         for (int i = 0; i < fileEntries.getLength(); i++) {
@@ -127,6 +126,118 @@ public class DigestCalculator {
         }
 
         return catalogo;
+    }
+
+    /**
+     * Função auxiliar que carrega o XML da lista de digests.
+     * Se o arquivo não existir ou estiver vazio (lista com zero linhas), cria um documento só com o <CATALOG>.
+     */
+    private Document carregarDocumento(String caminhoArqListaDigest) throws Exception {
+        File arquivo = new File(caminhoArqListaDigest);
+        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+        if (!arquivo.exists() || arquivo.length() == 0) {
+            Document documento = builder.newDocument();
+            documento.appendChild(documento.createElement("CATALOG"));
+            return documento;
+        }
+
+        return builder.parse(arquivo);
+    }
+
+    /**
+     * Função (iv): Acrescenta no XML os digests dos arquivos com status NOT FOUND.
+     * Se o arquivo já tem <FILE_ENTRY>, acrescenta um <DIGEST_ENTRY> nele; senão, cria um <FILE_ENTRY> no final.
+     * Os arquivos com status COLISION (e os demais) não são gravados.
+     *
+     * @param caminhoArqListaDigest O caminho do arquivo XML.
+     * @param digestsCalculados Map com os arquivos da pasta e seus digests calculados.
+     * @param resultados Map com o nome do arquivo e o seu status.
+     * @param tipoDigest O tipo de digest calculado (MD5/SHA1/SHA256/SHA512).
+     */
+    public void atualizarCatalogo(String caminhoArqListaDigest, Map<String, String> digestsCalculados,
+                                  Map<String, Status> resultados, String tipoDigest) throws Exception {
+        // Só reescreve o arquivo se houver algo para acrescentar
+        if (!resultados.containsValue(Status.NOT_FOUND)) {
+            return;
+        }
+
+        Document documento = carregarDocumento(caminhoArqListaDigest);
+        Element catalog = documento.getDocumentElement();
+
+        // Mapeia os <FILE_ENTRY> existentes pelo nome do arquivo
+        Map<String, Element> fileEntriesPorNome = new HashMap<>();
+        NodeList fileEntries = catalog.getElementsByTagName("FILE_ENTRY");
+        for (int i = 0; i < fileEntries.getLength(); i++) {
+            Element fileEntry = (Element) fileEntries.item(i);
+            String nomeArquivo = textoDaTag(fileEntry, "FILE_NAME");
+            // Se o nome aparecer em mais de um <FILE_ENTRY>, usa o primeiro
+            if (!fileEntriesPorNome.containsKey(nomeArquivo)) {
+                fileEntriesPorNome.put(nomeArquivo, fileEntry);
+            }
+        }
+
+        for (Map.Entry<String, Status> entry : resultados.entrySet()) {
+            if (entry.getValue() != Status.NOT_FOUND) {
+                continue;
+            }
+            String nomeArquivo = entry.getKey();
+
+            Element fileEntry = fileEntriesPorNome.get(nomeArquivo);
+            // Arquivo novo: cria o <FILE_ENTRY> no final do <CATALOG>
+            if (fileEntry == null) {
+                fileEntry = documento.createElement("FILE_ENTRY");
+                fileEntry.appendChild(criarElementoComTexto(documento, "FILE_NAME", nomeArquivo));
+                catalog.appendChild(fileEntry);
+                fileEntriesPorNome.put(nomeArquivo, fileEntry);
+            }
+
+            Element digestEntry = documento.createElement("DIGEST_ENTRY");
+            digestEntry.appendChild(criarElementoComTexto(documento, "DIGEST_TYPE", tipoDigest));
+            digestEntry.appendChild(criarElementoComTexto(documento, "DIGEST_HEX", digestsCalculados.get(nomeArquivo)));
+            fileEntry.appendChild(digestEntry);
+        }
+
+        gravarDocumento(documento, caminhoArqListaDigest);
+    }
+
+    /**
+     * Função auxiliar que cria um elemento <nomeTag>texto</nomeTag>.
+     */
+    private Element criarElementoComTexto(Document documento, String nomeTag, String texto) {
+        Element elemento = documento.createElement(nomeTag);
+        elemento.setTextContent(texto);
+        return elemento;
+    }
+
+    /**
+     * Função auxiliar que grava o documento no arquivo XML, com indentação.
+     */
+    private void gravarDocumento(Document documento, String caminhoArqListaDigest) throws Exception {
+        // Remove a indentação antiga para o Transformer reindentar tudo de forma uniforme
+        removerTextosEmBranco(documento.getDocumentElement());
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+        // O formato do enunciado não tem a declaração <?xml ...?>
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(new DOMSource(documento), new StreamResult(new File(caminhoArqListaDigest)));
+    }
+
+    /**
+     * Função auxiliar que remove, recursivamente, os nós de texto que só contêm espaços e quebras de linha.
+     */
+    private void removerTextosEmBranco(Node no) {
+        NodeList filhos = no.getChildNodes();
+        for (int i = filhos.getLength() - 1; i >= 0; i--) {
+            Node filho = filhos.item(i);
+            if (filho.getNodeType() == Node.TEXT_NODE && filho.getTextContent().trim().isEmpty()) {
+                no.removeChild(filho);
+            } else if (filho.getNodeType() == Node.ELEMENT_NODE) {
+                removerTextosEmBranco(filho);
+            }
+        }
     }
 
     /**
