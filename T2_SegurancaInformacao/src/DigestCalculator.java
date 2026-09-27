@@ -1,6 +1,10 @@
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class DigestCalculator {
 
@@ -34,8 +38,9 @@ public class DigestCalculator {
 
         try {
             DigestCalculator calculator = new DigestCalculator();
+            Map<String, Map<String, String>> catalogo = calculator.lerCatalogo(caminhoArqListaDigest);
             Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
-            // TODO: ler caminhoArqListaDigest, verificar status, imprimir e atualizar o XML
+            // TODO: verificar status, imprimir e atualizar o XML
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
             System.exit(1);
@@ -64,6 +69,62 @@ public class DigestCalculator {
             case "SHA512": return "SHA-512";
             default:       return null;
         }
+    }
+
+    /**
+     * Lê o arquivo XML com a lista de digests conhecidos.
+     *
+     * @param caminhoArqListaDigest O caminho do arquivo XML.
+     * @return Um Map com o nome do arquivo como chave e, como valor, um Map (tipoDigest -> digestHex).
+     *         Se o arquivo não existir ou estiver vazio, retorna um Map vazio.
+     */
+    public Map<String, Map<String, String>> lerCatalogo(String caminhoArqListaDigest) throws Exception {
+        // LinkedHashMap para manter a ordem do XML
+        Map<String, Map<String, String>> catalogo = new LinkedHashMap<>();
+        File arquivo = new File(caminhoArqListaDigest);
+
+        // Lista com zero linhas
+        if (!arquivo.exists() || arquivo.length() == 0) {
+            return catalogo;
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        Document documento = factory.newDocumentBuilder().parse(arquivo);
+
+        NodeList fileEntries = documento.getDocumentElement().getElementsByTagName("FILE_ENTRY");
+        for (int i = 0; i < fileEntries.getLength(); i++) {
+            Element fileEntry = (Element) fileEntries.item(i);
+            String nomeArquivo = textoDaTag(fileEntry, "FILE_NAME");
+
+            Map<String, String> digests = catalogo.get(nomeArquivo);
+            if (digests == null) {
+                digests = new LinkedHashMap<>();
+                catalogo.put(nomeArquivo, digests);
+            }
+
+            NodeList digestEntries = fileEntry.getElementsByTagName("DIGEST_ENTRY");
+            for (int j = 0; j < digestEntries.getLength(); j++) {
+                Element digestEntry = (Element) digestEntries.item(j);
+                String tipo = textoDaTag(digestEntry, "DIGEST_TYPE").toUpperCase();
+                // Minúsculas para comparar com o hex calculado
+                String hex = textoDaTag(digestEntry, "DIGEST_HEX").toLowerCase();
+                digests.put(tipo, hex);
+            }
+        }
+
+        return catalogo;
+    }
+
+    /**
+     * Função auxiliar que retorna o texto (sem espaços nas pontas) da primeira tag com o nome indicado.
+     */
+    private String textoDaTag(Element pai, String nomeTag) {
+        NodeList nos = pai.getElementsByTagName(nomeTag);
+        if (nos.getLength() == 0) {
+            throw new IllegalArgumentException("Tag <" + nomeTag + "> ausente no arquivo de lista de digests.");
+        }
+        // trim() porque o exemplo do enunciado tem espaço antes do hex
+        return nos.item(0).getTextContent().trim();
     }
 
     /**
