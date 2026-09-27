@@ -57,9 +57,16 @@ public class DigestCalculator {
 
         try {
             DigestCalculator calculator = new DigestCalculator();
-            Map<String, Map<String, String>> catalogo = calculator.lerCatalogo(caminhoArqListaDigest);
+
+            // Ex: {"quebrado.dat" -> {"MD5" -> "f36238b7...", "SHA1" -> "ed5af604..."}, "removido.dat" -> {"MD5" -> "00112233..."}}
+            Map<String, Map<String, String>> catalogo = calculator.lerXML(caminhoArqListaDigest);
+
+            // Ex (MD5): {"exato.dat" -> "8fda0416...", "vazio.dat" -> "d41d8cd9..."}
             Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
-            Map<String, Status> resultados = calculator.verificarStatus(digestsCalculados, catalogo, tipoDigest);
+
+            // Ex: {"exato.dat" -> NOT_OK, "grande.dat" -> NOT_FOUND, "texto_simples.txt" -> OK, "vazio.dat" -> COLISION}
+            Map<String, Status> resultados =calculator.verificarStatus(digestsCalculados, catalogo, tipoDigest);
+
             calculator.imprimirResultados(digestsCalculados, resultados, tipoDigest);
             calculator.atualizarCatalogo(caminhoArqListaDigest, digestsCalculados, resultados, tipoDigest);
         } catch (Exception e) {
@@ -99,8 +106,9 @@ public class DigestCalculator {
      * @return Um Map com o nome do arquivo como chave e, como valor, um Map (tipoDigest -> digestHex).
      *         Se o arquivo não existir ou estiver vazio, retorna um Map vazio.
      */
-    public Map<String, Map<String, String>> lerCatalogo(String caminhoArqListaDigest) throws Exception {
+    public Map<String, Map<String, String>> lerXML(String caminhoArqListaDigest) throws Exception {
         // LinkedHashMap para manter a ordem do XML
+        // Ex: {"quebrado.dat" -> {"MD5" -> "f36238b7...", "SHA1" -> "ed5af604..."}, "removido.dat" -> {"MD5" -> "00112233..."}}
         Map<String, Map<String, String>> catalogo = new LinkedHashMap<>();
         Document documento = carregarDocumento(caminhoArqListaDigest);
 
@@ -109,6 +117,7 @@ public class DigestCalculator {
             Element fileEntry = (Element) fileEntries.item(i);
             String nomeArquivo = textoDaTag(fileEntry, "FILE_NAME");
 
+            // Ex (quebrado.dat): {"MD5" -> "f36238b7...", "SHA1" -> "ed5af604..."}
             Map<String, String> digests = catalogo.get(nomeArquivo);
             if (digests == null) {
                 digests = new LinkedHashMap<>();
@@ -166,11 +175,14 @@ public class DigestCalculator {
         Element catalog = documento.getDocumentElement();
 
         // Mapeia os <FILE_ENTRY> existentes pelo nome do arquivo
+        // Ex: {"quebrado.dat" -> <FILE_ENTRY> do quebrado.dat, "removido.dat" -> <FILE_ENTRY> do removido.dat}
         Map<String, Element> fileEntriesPorNome = new HashMap<>();
         NodeList fileEntries = catalog.getElementsByTagName("FILE_ENTRY");
+        
         for (int i = 0; i < fileEntries.getLength(); i++) {
             Element fileEntry = (Element) fileEntries.item(i);
             String nomeArquivo = textoDaTag(fileEntry, "FILE_NAME");
+
             // Se o nome aparecer em mais de um <FILE_ENTRY>, usa o primeiro
             if (!fileEntriesPorNome.containsKey(nomeArquivo)) {
                 fileEntriesPorNome.put(nomeArquivo, fileEntry);
@@ -261,6 +273,7 @@ public class DigestCalculator {
      */
     public Map<String, String> calcularDigestsDaPasta(String caminhoPasta, String tipoDigest) throws Exception {
         // TreeMap para manter os arquivos ordenados por nome
+        // Ex (MD5): {"exato.dat" -> "8fda0416...", "vazio.dat" -> "d41d8cd9..."}
         Map<String, String> digestsCalculados = new TreeMap<>();
         File pasta = new File(caminhoPasta);
         File[] arquivos = pasta.listFiles();
@@ -320,9 +333,11 @@ public class DigestCalculator {
     public Map<String, Status> verificarStatus(Map<String, String> digestsCalculados,
                                                Map<String, Map<String, String>> catalogo,
                                                String tipoDigest) {
+        // Ex: {"exato.dat" -> NOT_OK, "grande.dat" -> NOT_FOUND, "texto_simples.txt" -> OK, "vazio.dat" -> COLISION}
         Map<String, Status> resultados = new TreeMap<>();
 
         // Passo 1: Agrupar por hash os nomes de arquivo que o possuem (pasta + XML, só do tipo pedido)
+        // Ex (MD5): {"d41d8cd9..." -> {"vazio.dat", "arquivo_fantasma.dat"}, "8fda0416..." -> {"exato.dat"}}
         Map<String, Set<String>> nomesPorHash = new HashMap<>();
 
         for (Map.Entry<String, String> entry : digestsCalculados.entrySet()) {
@@ -340,6 +355,7 @@ public class DigestCalculator {
             String nomeArquivo = entry.getKey();
             String hashCalculado = entry.getValue();
 
+            // Ex (quebrado.dat): {"MD5" -> "f36238b7...", "SHA1" -> "ed5af604..."}; null se o arquivo não está no XML
             Map<String, String> digestsDoArquivo = catalogo.get(nomeArquivo);
             String hashBase = (digestsDoArquivo == null) ? null : digestsDoArquivo.get(tipoDigest);
 

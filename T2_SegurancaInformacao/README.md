@@ -48,7 +48,7 @@ zero_esquerda_sha512.txt MD5 73deb27a6a363700cbae3986600ea0e6 (NOT FOUND)
 
 O programa exige 3 argumentos. O tipo é convertido para o nome padrão da JCA (`SHA1` → `SHA-1`, `SHA256` → `SHA-256`, `SHA512` → `SHA-512`). Na saída e no XML continua sendo usado o nome sem hífen, como no enunciado.
 
-### 2. Leitura do XML (`lerCatalogo`)
+### 2. Leitura do XML (`lerXML`)
 
 O XML é lido com `DocumentBuilder` e guardado num `Map<nome, Map<tipo, hex>>`
 
