@@ -13,6 +13,59 @@ public class DigestCalculator {
         // Construtor vazio
     }
 
+    public static void main(String[] args) {
+        // Encerra o programa se os argumentos incorretos forem fornecidos
+        if (args.length < 3) {
+            imprimirUso();
+            System.exit(1);
+        }
+
+        String tipoDigest = args[0].toUpperCase();
+        String caminhoArqListaDigest = args[1];
+        String caminhoPasta = args[2];
+
+        // Converte os nomes dados no enunciado para os nomes usados no JCA
+        String algoritmoJCA = converterParaJCA(tipoDigest);
+        if (algoritmoJCA == null) {
+            System.out.println("Tipo de digest inválido: " + args[0]);
+            imprimirUso();
+            System.exit(1);
+        }
+
+        try {
+            DigestCalculator calculator = new DigestCalculator();
+            Map<String, String> digestsCalculados = calculator.calcularDigestsDaPasta(caminhoPasta, algoritmoJCA);
+            // TODO: ler caminhoArqListaDigest, verificar status, imprimir e atualizar o XML
+        } catch (Exception e) {
+            System.out.println("Erro: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Imprime a orientação de execução do programa.
+     */
+    private static void imprimirUso() {
+        System.out.println("Uso: DigestCalculator <Tipo_Digest> <Caminho_ArqListaDigest> <Caminho_da_Pasta_dos_Arquivos>");
+        System.out.println("Tipo_Digest: MD5, SHA1, SHA256 ou SHA512");
+    }
+
+    /**
+     * Converte o tipo de digest do enunciado para o nome esperado pela JCA.
+     *
+     * @param tipoDigest O tipo informado (MD5/SHA1/SHA256/SHA512).
+     * @return O nome do algoritmo na JCA, ou null se o tipo for inválido.
+     */
+    private static String converterParaJCA(String tipoDigest) {
+        switch (tipoDigest) {
+            case "MD5":    return "MD5";
+            case "SHA1":   return "SHA-1";
+            case "SHA256": return "SHA-256";
+            case "SHA512": return "SHA-512";
+            default:       return null;
+        }
+    }
+
     /**
      * Função (i): Gera o digest para todos os arquivos presentes na pasta indicada.
      * 
