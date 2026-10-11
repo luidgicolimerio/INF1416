@@ -2,10 +2,8 @@ package cofre;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
-import javax.crypto.KeyGenerator;
 
 public class GerenciadorDeChaves {
 
@@ -18,43 +16,22 @@ public class GerenciadorDeChaves {
         // Construtor
     }
     
-    private javax.crypto.SecretKey geradorChaveSimetrica(String fraseSecreta) throws Exception {
-        // Set da seed com a frase secreta
-        java.security.SecureRandom secureRandom = java.security.SecureRandom.getInstance("SHA1PRNG"); //[cite: 5]
-        secureRandom.setSeed(fraseSecreta.getBytes("UTF-8"));
-        
-        // Gerador de chave PRNG com seed
-        javax.crypto.KeyGenerator keyGenerator = javax.crypto.KeyGenerator.getInstance("AES"); //[cite: 5]
-        keyGenerator.init(256, secureRandom);
-        
-        // Chave simétrica para abrir o arquivo
-        return keyGenerator.generateKey();
-    }
-    
-    /**
-     * Função genérica para decriptar arrays de bytes usando AES.
-     * Pode ser reaproveitada para arquivos index, share e arquivos secretos.
-     */
-    private byte[] decriptarAES(byte[] dadosCriptografados, javax.crypto.SecretKey chaveSimetrica) throws Exception {
-        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, chaveSimetrica);
-        return cipher.doFinal(dadosCriptografados);
-    }
-	
     /**
      * Restaura a chave privada a partir do arquivo .key criptografado.
      * @param caminhoArquivo Caminho para o arquivo da chave privada (ex: user-pkcs8-aes.key)
      * @param fraseSecreta Frase usada para gerar a chave AES que decripta o arquivo
      */
     public void carregarChavePrivada(String caminhoArquivo, String fraseSecreta) throws Exception {
+    	MotorCriptografico motor = new MotorCriptografico();
+    	
         // Gera chave simétrica para abrir o arquivo
-        javax.crypto.SecretKey chaveSimetrica = geradorChaveSimetrica(fraseSecreta);
+        javax.crypto.SecretKey chaveSimetrica = motor.gerarChaveAES(fraseSecreta.getBytes("UTF-8"));
         
         // Lê os bytes do ficheiro criptografado
         byte[] arquivoCriptografado = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(caminhoArquivo));
         
         // Decripta o arquivo
-        byte[] bytesDecriptados = decriptarAES(arquivoCriptografado, chaveSimetrica);
+        byte[] bytesDecriptados = motor.decriptarAES(arquivoCriptografado, chaveSimetrica);
         String chavePem = new String(bytesDecriptados, "UTF-8");
         
         // Limpa o cabeçalho, rodapé e quebras de linha do formato PEM
