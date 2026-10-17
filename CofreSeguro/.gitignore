@@ -3,5 +3,4 @@
 # Banco SQLite local de cada um
 *.db
 
-# JUnit para rodar pelo terminal (baixado por scripts/instalar-dependencias.sh)
 /lib/test/

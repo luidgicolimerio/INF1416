@@ -1,6 +1,6 @@
 package cofre.model.auth;
 
-// Classe fornecida no anexo do enunciado (Trabalho 3), transcrita sem alterações
+// Classe fornecida no anexo do enunciado, transcrita sem alterações
 // além da declaração do pacote.
 
 import java.io.*;

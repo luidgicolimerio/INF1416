@@ -1,6 +1,6 @@
 package cofre.model.log;
 
-// Códigos da Tabela de Mensagens de Registro (anexo do enunciado), com nome.
+// Códigos da Tabela de Mensagens de Registro, com nome.
 // O texto de cada um está em mensagens.sql.
 public final class Mid {
 

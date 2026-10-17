@@ -1,8 +1,3 @@
--- Estrutura do banco do Cofre Digital (SQLite).
--- Executado pelo BancoDeDados quando o arquivo do banco ainda não existe.
--- O BancoDeDados separa os comandos por ponto e vírgula: não usar esse caractere dentro de textos entre aspas.
--- Atenção: o SQLite só respeita as chaves estrangeiras com "PRAGMA foreign_keys = ON" em cada conexão.
-
 CREATE TABLE Grupos (
     gid   INTEGER PRIMARY KEY,
     nome  TEXT NOT NULL UNIQUE
@@ -11,8 +6,7 @@ CREATE TABLE Grupos (
 INSERT INTO Grupos (gid, nome) VALUES (1, 'Administrador');
 INSERT INTO Grupos (gid, nome) VALUES (2, 'Usuário');
 
--- Usuarios e Chaveiro apontam um para o outro: no cadastro, insere o usuário com kid NULL,
--- insere o par no Chaveiro com o uid e depois atualiza o kid do usuário (tudo numa transação).
+-- Usuarios e Chaveiro devem apontar um ao outro e devem ser registrados na mesma transação
 CREATE TABLE Usuarios (
     uid              INTEGER PRIMARY KEY AUTOINCREMENT,
     login_name       TEXT    NOT NULL UNIQUE,              -- e-mail do Sujeito do certificado
@@ -38,7 +32,6 @@ CREATE TABLE Mensagens (
     texto  TEXT NOT NULL                                   -- com os marcadores <login_name> e <arq_name>
 );
 
--- Não guarda o texto da mensagem: o logView monta o texto a partir de Mensagens, Usuarios e arquivo.
 CREATE TABLE Registros (
     rid        INTEGER PRIMARY KEY AUTOINCREMENT,
     mid        INTEGER NOT NULL REFERENCES Mensagens(mid),

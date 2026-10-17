@@ -1,6 +1,5 @@
 package cofre.model.entidades;
 
-// Grupos fixos do sistema, espelho da tabela Grupos (gid 1 e 2 inseridos pelo schema.sql)
 public enum Grupo {
 
     ADMINISTRADOR(1, "Administrador", "administrador"),

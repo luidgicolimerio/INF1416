@@ -1,6 +1,3 @@
--- Tabela de Mensagens de Registro (anexo do enunciado).
--- Executado pelo BancoDeDados logo após o schema.sql.
-
 INSERT INTO Mensagens (mid, texto) VALUES
     (1001, 'Sistema iniciado.'),
     (1002, 'Sistema encerrado.'),
