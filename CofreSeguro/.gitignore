@@ -1,1 +1,6 @@
 /bin/
+
+# Banco SQLite local de cada um
+*.db
+
+/lib/test/
