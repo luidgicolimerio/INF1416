@@ -22,14 +22,23 @@ public class GerenciadorDeChaves {
      * @param fraseSecreta Frase usada para gerar a chave AES que decripta o arquivo
      */
     public void carregarChavePrivada(String caminhoArquivo, String fraseSecreta) throws Exception {
-    	MotorCriptografico motor = new MotorCriptografico();
-    	
-        // Gera chave simétrica para abrir o arquivo
-        javax.crypto.SecretKey chaveSimetrica = motor.gerarChaveAES(fraseSecreta.getBytes("UTF-8"));
-        
         // Lê os bytes do ficheiro criptografado
         byte[] arquivoCriptografado = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(caminhoArquivo));
-        
+        carregarChavePrivada(arquivoCriptografado, fraseSecreta);
+    }
+
+    /**
+     * Restaura a chave privada a partir dos bytes do arquivo .key criptografado.
+     * Usado quando a chave vem da tabela Chaveiro (coluna chave_privada) em vez de um arquivo.
+     * @param arquivoCriptografado Conteúdo binário do arquivo da chave privada, ainda cifrado
+     * @param fraseSecreta Frase usada para gerar a chave AES que decripta o arquivo
+     */
+    public void carregarChavePrivada(byte[] arquivoCriptografado, String fraseSecreta) throws Exception {
+    	MotorCriptografico motor = new MotorCriptografico();
+
+        // Gera chave simétrica para abrir o arquivo
+        javax.crypto.SecretKey chaveSimetrica = motor.gerarChaveAES(fraseSecreta.getBytes("UTF-8"));
+
         // Decripta o arquivo
         byte[] bytesDecriptados = motor.decriptarAES(arquivoCriptografado, chaveSimetrica);
         String chavePem = new String(bytesDecriptados, "UTF-8");
@@ -55,17 +64,40 @@ public class GerenciadorDeChaves {
      * @param caminhoArquivo Caminho para o arquivo do certificado (ex: user-x509.crt)
      */
     public void carregarCertificado(String caminhoArquivo) throws Exception {
-        // Ceritificado Factory no padrão X.509
-        java.security.cert.CertificateFactory certificateFactory = java.security.cert.CertificateFactory.getInstance("X.509"); 
-        
         // Leitura do arquivo já no formato PEM
-        java.io.FileInputStream fis = new java.io.FileInputStream(caminhoArquivo);
-        this.certificado = (java.security.cert.X509Certificate) certificateFactory.generateCertificate(fis); 
-        
-        fis.close();
-        
+        try (java.io.FileInputStream fis = new java.io.FileInputStream(caminhoArquivo)) {
+            carregarCertificado(fis);
+        }
+    }
+
+    /**
+     * Restaura o certificado digital e a chave pública a partir de um texto PEM.
+     * Usado quando o certificado vem da tabela Chaveiro (coluna certificado_pem) em vez de um arquivo.
+     * @param pem Certificado no formato PEM (-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----)
+     */
+    public void carregarCertificadoPem(String pem) throws Exception {
+        byte[] bytes = pem.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        carregarCertificado(new java.io.ByteArrayInputStream(bytes));
+    }
+
+    private void carregarCertificado(java.io.InputStream entrada) throws Exception {
+        // Ceritificado Factory no padrão X.509
+        java.security.cert.CertificateFactory certificateFactory = java.security.cert.CertificateFactory.getInstance("X.509");
+        this.certificado = (java.security.cert.X509Certificate) certificateFactory.generateCertificate(entrada);
+
         // Extrai a chave pública de dentro do certificado
         this.chavePublica = this.certificado.getPublicKey();
+    }
+
+    /**
+     * Certificado carregado em PEM padrão, para gravar na tabela Chaveiro.
+     * Os arquivos .crt do Pacote-T3 trazem um texto descritivo antes do bloco PEM,
+     * por isso o PEM é refeito a partir do certificado lido.
+     */
+    public String certificadoEmPem() throws Exception {
+        String base64 = java.util.Base64.getMimeEncoder(64, "\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII))
+                .encodeToString(this.certificado.getEncoded());
+        return "-----BEGIN CERTIFICATE-----\n" + base64 + "\n-----END CERTIFICATE-----\n";
     }
 
     // --- Getters para que o Controller possa usar as chaves quando precisar ---

@@ -30,6 +30,14 @@ public class UsuarioDAO {
     }
 
     /**
+     * O administrador cadastrado na primeira execução (o de menor uid no grupo Administrador).
+     * É dele a chave que abre o index e o share, validada na partida e no logView.
+     */
+    public Optional<Usuario> buscarAdministradorDoSistema() {
+        return buscarUm("SELECT * FROM Usuarios WHERE gid = ? ORDER BY uid LIMIT 1", Grupo.ADMINISTRADOR.getGid());
+    }
+
+    /**
      * Insere um usuário novo com kid NULL. Depois de gravar o Chaveiro, chamar definirKid.
      * Para o cadastro completo, chamar dentro de BancoDeDados.emTransacao.
      */

@@ -24,6 +24,13 @@ public enum Grupo {
     }
 
     /**
+     * Como o grupo é escrito na coluna GRUPO_ARQUIVO do index (ex: "usuario").
+     */
+    public String getNomeNoIndex() {
+        return this.nomeNoIndex;
+    }
+
+    /**
      * Converte o gid lido do banco.
      */
     public static Grupo deGid(int gid) {

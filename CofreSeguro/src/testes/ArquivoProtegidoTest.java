@@ -11,8 +11,8 @@ class ArquivoProtegidoTest {
 
     private GerenciadorDeChaves gerenciadorAdmin;
 
-    private final String CAMINHO_CHAVE_ADMIN = "src/Pacote-T3/keys/admin-pkcs8-aes.key";
-    private final String CAMINHO_CERT_ADMIN = "src/Pacote-T3/keys/admin-x509.crt";
+    private final String CAMINHO_CHAVE_ADMIN = "src/Pacote-T3/Keys/admin-pkcs8-aes.key";
+    private final String CAMINHO_CERT_ADMIN = "src/Pacote-T3/Keys/admin-x509.crt";
     private final String FRASE_SECRETA_ADMIN = "admin";
     private final String PASTA_ARQUIVOS = "src/Pacote-T3/Files";
 

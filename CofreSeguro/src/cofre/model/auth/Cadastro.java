@@ -13,10 +13,7 @@ import cofre.model.log.Registrador;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Base64;
 
 // Cadastro de usuário em duas fases: validar (antes da tela de confirmação) e efetivar (depois).
 // Registra 6003 a 6009. Os eventos de tela (6001, 6002, 6010) ficam com o Controller.
@@ -97,7 +94,14 @@ public class Cadastro {
                     "A chave privada não corresponde ao certificado digital (assinatura inválida).");
         }
 
-        return new CadastroValidado(info, emPem(chaves.getCertificado()), chaveCifrada, dados.grupo(),
+        String certificadoPem;
+        try {
+            certificadoPem = chaves.certificadoEmPem();
+        } catch (Exception e) {
+            throw new IllegalStateException("Falha ao codificar o certificado em PEM.", e);
+        }
+
+        return new CadastroValidado(info, certificadoPem, chaveCifrada, dados.grupo(),
                 dados.senha(), chaves.getChavePrivada(), chaves.getChavePublica());
     }
 
@@ -170,18 +174,5 @@ public class Cadastro {
             throw new Exception("Arquivo inexistente ou ilegível: " + caminho);
         }
         return p;
-    }
-
-    /**
-     * Certificado em PEM padrão. O .crt do Pacote-T3 traz um texto descritivo antes do bloco PEM,
-     * por isso o PEM é refeito a partir do certificado lido.
-     */
-    private static String emPem(X509Certificate certificado) {
-        try {
-            String base64 = Base64.getMimeEncoder(64, "\n".getBytes()).encodeToString(certificado.getEncoded());
-            return "-----BEGIN CERTIFICATE-----\n" + base64 + "\n-----END CERTIFICATE-----\n";
-        } catch (CertificateEncodingException e) {
-            throw new IllegalStateException("Falha ao codificar o certificado em PEM.", e);
-        }
     }
 }

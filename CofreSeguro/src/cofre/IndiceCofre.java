@@ -1,5 +1,7 @@
 package cofre;
 
+import cofre.model.entidades.Usuario;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,6 +83,15 @@ public class IndiceCofre {
                 todosCompartilhamentos.add(new EntradaShare(partes[0], partes[1], partes[2]));
             }
         }
+    }
+
+    /**
+     * Versão para o usuário logado: usa o login name e o grupo dele no formato do index.
+     * O nome do grupo na tela ("Usuário") é diferente do escrito no index ("usuario"),
+     * por isso a comparação usa Grupo.getNomeNoIndex().
+     */
+    public List<MetadadosArquivo> listarArquivosPermitidos(Usuario usuario) {
+        return listarArquivosPermitidos(usuario.getLoginName(), usuario.getGrupo().getNomeNoIndex());
     }
 
     /**

@@ -16,7 +16,7 @@ class GerenciadorDeChavesTest {
 
     @Test
     void testCarregarChavePrivadaSucesso() {
-        String caminhoChave = "src/Pacote-T3/keys/admin-pkcs8-aes.key"; 
+        String caminhoChave = "src/Pacote-T3/Keys/admin-pkcs8-aes.key"; 
         String fraseSecreta = "admin"; 
 
         assertDoesNotThrow(() -> {
@@ -35,7 +35,7 @@ class GerenciadorDeChavesTest {
     
     @Test
     void testCarregarChavePrivadaFalhaSenhaInvalida() {
-        String caminhoChave = "src/Pacote-T3/keys/admin-pkcs8-aes.key";
+        String caminhoChave = "src/Pacote-T3/Keys/admin-pkcs8-aes.key";
         String fraseSecretaIncorreta = "frase_errada";
 
         // Como o AES/ECB/PKCS5Padding verifica o padding, uma senha errada gerará uma BadPaddingException
@@ -46,7 +46,7 @@ class GerenciadorDeChavesTest {
 
     @Test
     void testCarregarCertificadoSucesso() {
-        String caminhoCert = "src/Pacote-T3/keys/admin-x509.crt";
+        String caminhoCert = "src/Pacote-T3/Keys/admin-x509.crt";
 
         assertDoesNotThrow(() -> {
             gerenciador.carregarCertificado(caminhoCert);
@@ -59,6 +59,49 @@ class GerenciadorDeChavesTest {
         System.out.println("Dono do Certificado: " + gerenciador.getCertificado().getSubjectX500Principal());
         System.out.println("Algoritmo da Chave Pública: " + gerenciador.getChavePublica().getAlgorithm());
         System.out.println("Formato da Chave Pública: " + gerenciador.getChavePublica().getFormat());
+    }
+
+    @Test
+    void testCarregarChavePrivadaDeBytes() throws Exception {
+        // Como fica na tabela Chaveiro: os bytes do arquivo .key, ainda cifrados
+        byte[] chaveCifrada = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("src/Pacote-T3/Keys/admin-pkcs8-aes.key"));
+        gerenciador.carregarChavePrivada(chaveCifrada, "admin");
+
+        GerenciadorDeChaves doArquivo = new GerenciadorDeChaves();
+        doArquivo.carregarChavePrivada("src/Pacote-T3/Keys/admin-pkcs8-aes.key", "admin");
+
+        assertArrayEquals(doArquivo.getChavePrivada().getEncoded(), gerenciador.getChavePrivada().getEncoded(),
+                "Carregar dos bytes deve dar a mesma chave que carregar do arquivo.");
+        assertThrows(Exception.class, () -> gerenciador.carregarChavePrivada(chaveCifrada, "frase_errada"));
+    }
+
+    @Test
+    void testCertificadoEmPemEDePem() throws Exception {
+        gerenciador.carregarCertificado("src/Pacote-T3/Keys/admin-x509.crt");
+        String pem = gerenciador.certificadoEmPem();
+
+        assertTrue(pem.startsWith("-----BEGIN CERTIFICATE-----\n"), "Só o bloco PEM, sem o texto descritivo do .crt.");
+        assertTrue(pem.endsWith("-----END CERTIFICATE-----\n"));
+
+        // Como fica na tabela Chaveiro: o texto PEM
+        GerenciadorDeChaves doPem = new GerenciadorDeChaves();
+        doPem.carregarCertificadoPem(pem);
+        assertEquals(gerenciador.getCertificado(), doPem.getCertificado(), "O PEM deve reconstruir o mesmo certificado.");
+        assertEquals(gerenciador.getChavePublica(), doPem.getChavePublica());
+    }
+
+    @Test
+    void testParDoBancoValida() throws Exception {
+        // Chave e certificado como viriam do Chaveiro devem formar um par válido (2048 bytes, como no logView)
+        GerenciadorDeChaves arquivo = new GerenciadorDeChaves();
+        arquivo.carregarCertificado("src/Pacote-T3/Keys/admin-x509.crt");
+
+        gerenciador.carregarCertificadoPem(arquivo.certificadoEmPem());
+        gerenciador.carregarChavePrivada(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("src/Pacote-T3/Keys/admin-pkcs8-aes.key")), "admin");
+
+        assertTrue(new cofre.MotorCriptografico().validarParDeChaves(
+                gerenciador.getChavePrivada(), gerenciador.getChavePublica(), 2048));
     }
 
     @Test

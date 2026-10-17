@@ -2,6 +2,8 @@ package testes;
 
 import cofre.IndiceCofre;
 import cofre.IndiceCofre.MetadadosArquivo;
+import cofre.model.entidades.Grupo;
+import cofre.model.entidades.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -72,6 +74,37 @@ class IndiceCofreTest {
         // Não está no grupoA e não tem compartilhamento no share.
         assertEquals(1, arquivosPermitidos.size(), "O user04 deve ter acesso a apenas 1 arquivo.");
         assertEquals("ARQ_BLOQ", arquivosPermitidos.get(0).getNomeCodigo());
+    }
+
+    @Test
+    void testPoliticaComUsuariosDoPacoteT3() {
+        // index e share decifrados do Pacote-T3 (grupos escritos como no arquivo real)
+        String index =
+            "XXYYZZ00 teste00.docx admin@inf1416.puc-rio.br administrador\n" +
+            "XXYYZZ11 teste01.docx user01@inf1416.puc-rio.br usuario\n" +
+            "XXYYZZ22 teste02.docx user02@inf1416.puc-rio.br usuario\n";
+        String share = "XXYYZZ22 1 user01@inf1416.puc-rio.br\n";
+        IndiceCofre indice = new IndiceCofre(index, share);
+
+        Usuario admin = new Usuario(1, "admin@inf1416.puc-rio.br", "Administrator", Grupo.ADMINISTRADOR, 1, "h", new byte[] {1}, null, 0, 0);
+        Usuario user01 = new Usuario(2, "user01@inf1416.puc-rio.br", "Usuario 01", Grupo.USUARIO, 2, "h", new byte[] {1}, null, 0, 0);
+        Usuario user02 = new Usuario(3, "user02@inf1416.puc-rio.br", "Usuario 02", Grupo.USUARIO, 3, "h", new byte[] {1}, null, 0, 0);
+
+        assertEquals(List.of("XXYYZZ00"), codigos(indice.listarArquivosPermitidos(admin)),
+                "O admin vê só o arquivo dele (é o único do grupo administrador).");
+        assertEquals(List.of("XXYYZZ11", "XXYYZZ22"), codigos(indice.listarArquivosPermitidos(user01)),
+                "O user01 vê o dele e o do user02 (mesmo grupo e compartilhado).");
+        assertEquals(List.of("XXYYZZ11", "XXYYZZ22"), codigos(indice.listarArquivosPermitidos(user02)),
+                "O user02 vê o dele e o do user01 (mesmo grupo).");
+
+        MetadadosArquivo compartilhado = indice.listarArquivosPermitidos(user01).get(1);
+        assertEquals("1", compartilhado.getIdCompartilhamento(), "Para o user01, o XXYYZZ22 abre pelo .1.shr.");
+        assertNull(indice.listarArquivosPermitidos(user02).get(1).getIdCompartilhamento(),
+                "Para o dono, o XXYYZZ22 abre pelo .env.");
+    }
+
+    private static List<String> codigos(List<MetadadosArquivo> arquivos) {
+        return arquivos.stream().map(MetadadosArquivo::getNomeCodigo).toList();
     }
 
     @Test

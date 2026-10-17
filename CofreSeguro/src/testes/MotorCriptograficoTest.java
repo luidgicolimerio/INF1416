@@ -17,8 +17,8 @@ class MotorCriptograficoTest {
     private MotorCriptografico motor;
 
     // Caminhos das chaves do administrador
-    private final String CAMINHO_CHAVE_ADMIN = "src/Pacote-T3/keys/admin-pkcs8-aes.key";
-    private final String CAMINHO_CERT_ADMIN = "src/Pacote-T3/keys/admin-x509.crt";
+    private final String CAMINHO_CHAVE_ADMIN = "src/Pacote-T3/Keys/admin-pkcs8-aes.key";
+    private final String CAMINHO_CERT_ADMIN = "src/Pacote-T3/Keys/admin-x509.crt";
     private final String FRASE_SECRETA_ADMIN = "admin";
 
     // Caminho da pasta segura

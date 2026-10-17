@@ -63,6 +63,18 @@ class UsuarioDAOTest {
     }
 
     @Test
+    void testAdministradorDoSistema() {
+        assertTrue(dao.buscarAdministradorDoSistema().isEmpty(), "Banco novo: ainda não há administrador.");
+
+        dao.inserir(LOGIN, "Usuario 01", Grupo.USUARIO, HASH, TOTP);
+        dao.inserir("admin@inf1416.puc-rio.br", "Administrator", Grupo.ADMINISTRADOR, HASH, TOTP);
+        dao.inserir("admin2@inf1416.puc-rio.br", "Outro admin", Grupo.ADMINISTRADOR, HASH, TOTP);
+
+        assertEquals("admin@inf1416.puc-rio.br", dao.buscarAdministradorDoSistema().orElseThrow().getLoginName(),
+                "Deve ser o primeiro administrador cadastrado, mesmo havendo outros.");
+    }
+
+    @Test
     void testLoginInexistente() {
         assertEquals(Optional.empty(), dao.buscarPorLogin("ninguem@inf1416.puc-rio.br"),
                 "Um login que não existe deve devolver vazio (log 2005).");
