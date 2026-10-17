@@ -1,6 +1,6 @@
 -- Estrutura do banco do Cofre Digital (SQLite).
 -- Executado pelo BancoDeDados quando o arquivo do banco ainda não existe.
--- Não usar ponto e vírgula em comentários: o BancoDeDados separa os comandos por ele.
+-- O BancoDeDados separa os comandos por ponto e vírgula: não usar esse caractere dentro de textos entre aspas.
 -- Atenção: o SQLite só respeita as chaves estrangeiras com "PRAGMA foreign_keys = ON" em cada conexão.
 
 CREATE TABLE Grupos (
