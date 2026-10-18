@@ -24,6 +24,12 @@ class CertificadoInfoTest {
         assertEquals("admin@inf1416.puc-rio.br", info.email(), "O login name vem do e-mail do Sujeito.");
         assertTrue(info.emissor().contains("CN=AC INF1416"), "Emissor: " + info.emissor());
         assertTrue(info.validoDe().before(info.validoAte()));
+
+        // Texto da tela de confirmação. O horário depende do fuso da máquina, por isso só o formato e os anos.
+        String validade = info.validadeFormatada();
+        assertTrue(validade.matches("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}:\\d{2} a \\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}:\\d{2}"),
+                "Formato inesperado: " + validade);
+        assertTrue(validade.contains("/2026 ") && validade.contains("/2027 "), "Validade: " + validade);
     }
 
     @Test

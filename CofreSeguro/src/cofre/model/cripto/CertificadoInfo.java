@@ -1,6 +1,7 @@
 package cofre.model.cripto;
 
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -31,6 +32,14 @@ public record CertificadoInfo(int versao, String serie, Date validoDe, Date vali
                 certificado.getIssuerX500Principal().toString(),
                 atributo(sujeito, BCStyle.CN, "CN"),
                 atributo(sujeito, BCStyle.EmailAddress, "EMAILADDRESS"));
+    }
+
+    /**
+     * Período de validade para a tela de confirmação, ex: "23/04/2026 12:01:50 a 23/04/2027 12:01:50".
+     */
+    public String validadeFormatada() {
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        return formato.format(validoDe) + " a " + formato.format(validoAte);
     }
 
     private static String atributo(X500Name nome, ASN1ObjectIdentifier tipo, String rotulo) {
