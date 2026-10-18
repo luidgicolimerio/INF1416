@@ -268,9 +268,11 @@ public class PastaSegura {
             );
         }
 
-        // 5. Gravar o conteúdo com o nome secreto na mesma pasta da consulta
+        // 5. Gravar o conteúdo com o nome secreto na mesma pasta da consulta e programar remoção ao sair
         try {
-            return arqSecreto.salvarArquivoDecriptado(caminhoPasta.trim(), nomeSecreto);
+            Path caminhoSalvo = arqSecreto.salvarArquivoDecriptado(caminhoPasta.trim(), nomeSecreto);
+            caminhoSalvo.toFile().deleteOnExit();
+            return caminhoSalvo;
         } catch (Exception e) {
             throw new RuntimeException("Erro ao gravar o arquivo decriptado em disco: " + e.getMessage(), e);
         }
