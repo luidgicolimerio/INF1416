@@ -10,7 +10,6 @@ import javax.crypto.SecretKey;
 public class MotorCriptografico {
 
     public MotorCriptografico() {
-        // Construtor vazio (ou os métodos podem ser estáticos, se preferir)
     }
     
     /**
@@ -38,9 +37,9 @@ public class MotorCriptografico {
      * @return Bytes do arquivo em texto plano (decriptado)
      */
     public byte[] decriptarAES(byte[] dadosCriptografados, SecretKey chaveAES) throws Exception {
-    	javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding"); //[cite: 5, 6, 22]
-        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, chaveAES); //[cite: 22, 23]
-        return cipher.doFinal(dadosCriptografados); //[cite: 22, 23]
+    	javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, chaveAES);
+        return cipher.doFinal(dadosCriptografados);
     }
     
     /**

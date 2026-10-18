@@ -82,7 +82,7 @@ public class TelaConfirmacao extends JPanel {
     public void preencherDados(CertificadoInfo info) {
         lblVersao.setText(String.valueOf(info.versao()));
         lblSerie.setText(info.serie());
-        // lblValidade.setText(info.validadeFormatada());
+        lblValidade.setText(info.validadeFormatada());
         lblAlgoritmo.setText(info.tipoAssinatura());
         lblEmissor.setText("<html><body style='width:380px'>" + info.emissor() + "</body></html>");
         lblSujeito.setText(info.nome());

@@ -280,7 +280,6 @@ class AutenticadorTest {
     }
 
     // --- Etapa 3: código aceito na primeira tentativa ---
-    // Investigação do relato "o TOTP só dá certo na terceira tentativa".
 
     /**
      * Código que o celular mostraria se o relógio dele estivesse deslocado em "deslocamento" intervalos

@@ -76,7 +76,7 @@ class PartidaEPastaSeguraTest {
     @AfterEach
     void tearDown() throws Exception {
         if (banco != null) {
-            banco.fechar(); // Se o método em BancoDeDados se chamar close(), use banco.close();
+            banco.fechar();
         }
     }
 
@@ -185,8 +185,6 @@ class PartidaEPastaSeguraTest {
         Path salvo22Dono = pastaSegura.abrir(user02, PASTA_FILES, "user02", arq22User02);
         assertTrue(Files.exists(salvo22Dono));
         Files.deleteIfExists(salvo22Dono);
-
-        System.out.println("=== TODOS OS TESTES DE PARTIDA E PASTA SEGURA PASSARAM COM SUCESSO! ===");
     }
 
     // --- Métodos Auxiliares do Teste ---

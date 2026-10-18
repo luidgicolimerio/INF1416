@@ -22,7 +22,6 @@ public class GerenciadorDeChaves {
      * @param fraseSecreta Frase usada para gerar a chave AES que decripta o arquivo
      */
     public void carregarChavePrivada(String caminhoArquivo, String fraseSecreta) throws Exception {
-        // Lê os bytes do ficheiro criptografado
         byte[] arquivoCriptografado = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(caminhoArquivo));
         carregarChavePrivada(arquivoCriptografado, fraseSecreta);
     }
