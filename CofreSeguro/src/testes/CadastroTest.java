@@ -122,6 +122,86 @@ class CadastroTest {
         assertFalhaCom(Mid.SENHA_PESSOAL_INVALIDA, dados("user01", "user01", Grupo.USUARIO, SENHA, "13572469"));
     }
 
+    // --- Confirmação da senha pessoal ---
+    // O código 6003 é o mesmo para senha fora do formato e para confirmação diferente,
+    // então estes testes conferem também a mensagem, para saber qual checagem recusou.
+
+    private static final String MSG_CONFIRMACAO = "A senha e a confirmação não são iguais.";
+
+    private void assertConfirmacaoRecusada(String senha, char[] confirmacao) {
+        DadosCadastro d = new DadosCadastro(KEYS + "user01-x509.crt", KEYS + "user01-pkcs8-aes.key", "user01",
+                Grupo.USUARIO, senha.toCharArray(), confirmacao);
+        CadastroInvalidoException e = assertThrows(CadastroInvalidoException.class, () -> cadastro.validar(d, null),
+                "Confirmação \"" + (confirmacao == null ? "null" : new String(confirmacao)) + "\" deveria ser recusada.");
+        assertEquals(MSG_CONFIRMACAO, e.getMessage(), "A recusa deve ser pela confirmação, não pelo formato.");
+        assertEquals(Mid.SENHA_PESSOAL_INVALIDA, e.getMid());
+        assertEquals(Mid.SENHA_PESSOAL_INVALIDA, ultimoMid());
+        assertEquals(0, usuarioDAO.contar());
+    }
+
+    @Test
+    void testConfirmacaoComUmDigitoDiferente() {
+        assertConfirmacaoRecusada(SENHA, "13572469".toCharArray());
+        assertConfirmacaoRecusada(SENHA, "23572468".toCharArray());
+    }
+
+    @Test
+    void testConfirmacaoComOutroTamanho() {
+        assertConfirmacaoRecusada(SENHA, "1357246".toCharArray());      // um dígito a menos
+        assertConfirmacaoRecusada(SENHA, "135724680".toCharArray());    // um dígito a mais
+    }
+
+    @Test
+    void testConfirmacaoComOsMesmosDigitosEmOutraOrdem() {
+        assertConfirmacaoRecusada(SENHA, "13572486".toCharArray());
+    }
+
+    @Test
+    void testConfirmacaoQueTambemEhSenhaValida() {
+        // As duas são senhas válidas, mas diferentes entre si
+        assertConfirmacaoRecusada(SENHA, "24681357".toCharArray());
+    }
+
+    @Test
+    void testConfirmacaoVaziaOuAusente() {
+        assertConfirmacaoRecusada(SENHA, new char[0]);
+        assertConfirmacaoRecusada(SENHA, null);
+    }
+
+    @Test
+    void testConfirmacaoIgualEmArraysDiferentes() {
+        // A tela entrega dois arrays diferentes (um de cada campo): a comparação deve ser pelo conteúdo
+        char[] senha = SENHA.toCharArray();
+        char[] confirmacao = SENHA.toCharArray();
+        assertNotSame(senha, confirmacao);
+
+        DadosCadastro d = new DadosCadastro(KEYS + "user01-x509.crt", KEYS + "user01-pkcs8-aes.key", "user01",
+                Grupo.USUARIO, senha, confirmacao);
+        assertDoesNotThrow(() -> cadastro.validar(d, null), "Senha e confirmação iguais devem ser aceitas.");
+    }
+
+    @Test
+    void testConfirmacaoDiferenteEhRecusadaAntesDosArquivos() {
+        // Com o certificado inexistente e a confirmação diferente, o erro é o da confirmação (6003), não o 6004
+        DadosCadastro d = new DadosCadastro(KEYS + "nao-existe.crt", KEYS + "user01-pkcs8-aes.key", "user01",
+                Grupo.USUARIO, SENHA.toCharArray(), "13572469".toCharArray());
+
+        CadastroInvalidoException e = assertThrows(CadastroInvalidoException.class, () -> cadastro.validar(d, null));
+        assertEquals(MSG_CONFIRMACAO, e.getMessage());
+        assertFalse(registroDAO.listarEmOrdem().stream().anyMatch(l -> l.mid() == Mid.CERTIFICADO_CAMINHO_INVALIDO),
+                "A validação deve parar na confirmação, sem chegar ao certificado.");
+    }
+
+    @Test
+    void testSenhaForaDoFormatoTemPrioridadeSobreAConfirmacao() {
+        // Se a senha já é inválida, a mensagem é a do formato, mesmo com a confirmação diferente
+        DadosCadastro d = dados("user01", "user01", Grupo.USUARIO, "11111111", "22222222");
+
+        CadastroInvalidoException e = assertThrows(CadastroInvalidoException.class, () -> cadastro.validar(d, null));
+        assertNotEquals(MSG_CONFIRMACAO, e.getMessage());
+        assertEquals(Mid.SENHA_PESSOAL_INVALIDA, e.getMid());
+    }
+
     @Test
     void testCertificadoInexistente() {
         assertFalhaCom(Mid.CERTIFICADO_CAMINHO_INVALIDO, new DadosCadastro(KEYS + "nao-existe.crt",
