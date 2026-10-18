@@ -279,6 +279,97 @@ class AutenticadorTest {
         assertEquals(Resultado.SUCESSO, autenticador.etapa3(codigoAtual()));
     }
 
+    // --- Etapa 3: código aceito na primeira tentativa ---
+    // Investigação do relato "o TOTP só dá certo na terceira tentativa".
+
+    /**
+     * Código que o celular mostraria se o relógio dele estivesse deslocado em "deslocamento" intervalos
+     * de 30 s em relação ao computador (ex: -1 = celular 30 s atrasado).
+     */
+    private String codigoDoCelular(int deslocamento) throws Exception {
+        java.lang.reflect.Method totpCode = TOTP.class.getDeclaredMethod("TOTPCode", long.class);
+        totpCode.setAccessible(true);
+        long intervaloAtual = (System.currentTimeMillis() / 1000) / 30;
+        return (String) totpCode.invoke(new TOTP(chaveTotp, 30), intervaloAtual + deslocamento);
+    }
+
+    private static long intervaloAtual() {
+        return (System.currentTimeMillis() / 1000) / 30;
+    }
+
+    @Test
+    void testTokenAceitoNaPrimeiraTentativaEmVariosLogins() throws Exception {
+        // Cada login completo, do zero, deve aceitar o código atual logo na primeira tentativa
+        for (int i = 0; i < 5; i++) {
+            autenticador.iniciar();
+            passarEtapas1e2();
+
+            assertEquals(Resultado.SUCESSO, autenticador.etapa3(codigoAtual()),
+                    "O código correto deve ser aceito na primeira tentativa (login " + (i + 1) + ").");
+        }
+        assertFalse(mids().contains(4004), "Nenhum erro de token deve ter sido contabilizado.");
+        assertEquals(5, usuarioDAO.buscarPorLogin(LOGIN).orElseThrow().getTotalAcessos());
+    }
+
+    @Test
+    void testCelularAte30SegundosAtrasadoOuAdiantado() throws Exception {
+        // Enunciado: margem de 30 s a menos e 30 s a mais. Cada caso é um login novo e a primeira tentativa.
+        for (int tentativa = 0; tentativa < 3; tentativa++) {
+            long t = intervaloAtual();
+            String atrasado = codigoDoCelular(-1);
+            String adiantado = codigoDoCelular(+1);
+
+            autenticador.iniciar();
+            passarEtapas1e2();
+            Resultado comAtrasado = autenticador.etapa3(atrasado);
+
+            autenticador.iniciar();
+            passarEtapas1e2();
+            Resultado comAdiantado = autenticador.etapa3(adiantado);
+
+            if (t == intervaloAtual()) {
+                assertEquals(Resultado.SUCESSO, comAtrasado, "Celular 30 s atrasado: aceito na primeira tentativa.");
+                assertEquals(Resultado.SUCESSO, comAdiantado, "Celular 30 s adiantado: aceito na primeira tentativa.");
+                return;
+            }
+            // O intervalo de 30 s virou durante o teste: repete
+        }
+        fail("Não foi possível testar dentro de um mesmo intervalo de 30 segundos.");
+    }
+
+    @Test
+    void testCelular60SegundosForaDeHoraEhRecusado() throws Exception {
+        // Fora da margem do enunciado: é este o caso que faz "às vezes" funcionar quando o relógio está errado
+        for (int tentativa = 0; tentativa < 3; tentativa++) {
+            long t = intervaloAtual();
+            String muitoAtrasado = codigoDoCelular(-2);
+            String muitoAdiantado = codigoDoCelular(+2);
+
+            passarEtapas1e2();
+            Resultado r1 = autenticador.etapa3(muitoAtrasado);
+            Resultado r2 = autenticador.etapa3(muitoAdiantado);
+
+            if (t == intervaloAtual()) {
+                assertEquals(Resultado.ERRO, r1, "Celular 60 s atrasado: fora da margem de 30 s.");
+                assertEquals(Resultado.ERRO, r2, "Celular 60 s adiantado: fora da margem de 30 s.");
+                return;
+            }
+            autenticador.iniciar();
+        }
+        fail("Não foi possível testar dentro de um mesmo intervalo de 30 segundos.");
+    }
+
+    @Test
+    void testChaveDecifradaEhAMesmaDoCadastro() throws Exception {
+        // A etapa 3 decifra a chave com a senha descoberta na etapa 2: precisa ser exatamente a do cadastro
+        passarEtapas1e2();
+        String decifrada = ChaveTOTP.decifrar(
+                usuarioDAO.buscarPorLogin(LOGIN).orElseThrow().getChaveTotpCifrada(), sessao.getSenha());
+
+        assertEquals(chaveTotp, decifrada);
+        assertEquals(new TOTP(chaveTotp, 30).generateCode(), new TOTP(decifrada, 30).generateCode());
+    }
+
     // --- Fluxo e ordem das etapas ---
 
     @Test
