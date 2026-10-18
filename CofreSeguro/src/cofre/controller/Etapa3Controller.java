@@ -6,6 +6,8 @@ import cofre.model.entidades.Sessao;
 import cofre.view.TelaEtapa3;
 
 import javax.swing.*;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Controller da Etapa 3 da autenticação: verificação do token TOTP (Passo 3).
@@ -16,6 +18,9 @@ public class Etapa3Controller {
     private final Autenticador autenticador;
     private final Sessao sessao;
     private final NavegacaoController navegacao;
+
+    // O TOTP depende da hora: mostrar a do computador ajuda a perceber um relógio fora de hora
+    private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private int tentativasFalhas = 0;
 
@@ -47,7 +52,10 @@ public class Etapa3Controller {
                 tentativasFalhas++;
                 JOptionPane.showMessageDialog(
                         view,
-                        "Código inválido. Tentativa " + tentativasFalhas + " de 3.",
+                        "Código inválido. Tentativa " + tentativasFalhas + " de 3.\n\n"
+                                + "Se o código digitado é o que o celular mostra, confira o relógio:\n"
+                                + "este computador marca " + LocalTime.now().format(FORMATO_HORA) + ", e a diferença\n"
+                                + "para o horário do celular precisa ser de no máximo 30 segundos.",
                         "Token TOTP Inválido",
                         JOptionPane.WARNING_MESSAGE
                 );

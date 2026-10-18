@@ -99,7 +99,7 @@ public class Autenticador {
 
     /**
      * Descobre a senha a partir dos pares clicados no teclado virtual e a confere com o bcrypt.
-     * Leva até ~1 s (bcrypt): a tela deve chamar fora da thread do Swing.
+     * Leva alguns segundos no pior caso (bcrypt): a tela deve chamar fora da thread do Swing.
      *
      * @param pares Pares de TecladoVirtual.pares(), um por clique
      */
@@ -133,40 +133,25 @@ public class Autenticador {
     }
 
     /**
-     * Testa as combinações possíveis (um dígito de cada par) até achar a que confere com o hash.
-     * Descarta antes do bcrypt as combinações com dígito repetido, que nunca seriam uma senha válida.
+     * Testa as senhas possíveis para os pares clicados até achar a que confere com o hash.
+     * O TecladoVirtual já descarta as combinações que violam a regra da senha; as restantes
+     * (até 1024 com 10 cliques) são testadas em paralelo, porque cada bcrypt leva ~20 ms.
      *
      * @return A senha descoberta, ou null se nenhuma combinação conferir
      */
     private char[] descobrirSenha(String hash, List<int[]> pares) {
-        if (pares == null || pares.size() < Senhas.TAMANHO_MINIMO || pares.size() > Senhas.TAMANHO_MAXIMO) {
-            return null;
-        }
-        char[] candidata = new char[pares.size()];
+        List<char[]> candidatas = TecladoVirtual.candidatas(pares);
         try {
-            return buscar(hash, pares, 0, candidata, new boolean[10]);
+            return candidatas.parallelStream()
+                    .filter(c -> Senhas.confere(hash, c))
+                    .findAny()
+                    .map(char[]::clone)
+                    .orElse(null);
         } finally {
-            Arrays.fill(candidata, '\0');
-        }
-    }
-
-    private char[] buscar(String hash, List<int[]> pares, int posicao, char[] candidata, boolean[] usado) {
-        if (posicao == pares.size()) {
-            return Senhas.confere(hash, candidata) ? candidata.clone() : null;
-        }
-        for (int digito : pares.get(posicao)) {
-            if (digito < 0 || digito > 9 || usado[digito]) {
-                continue;
-            }
-            usado[digito] = true;
-            candidata[posicao] = (char) ('0' + digito);
-            char[] achada = buscar(hash, pares, posicao + 1, candidata, usado);
-            usado[digito] = false;
-            if (achada != null) {
-                return achada;
+            for (char[] c : candidatas) {
+                Arrays.fill(c, '\0');
             }
         }
-        return null;
     }
 
     // =========================================================================

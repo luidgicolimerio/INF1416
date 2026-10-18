@@ -85,6 +85,48 @@ public class TecladoVirtual {
     }
 
     /**
+     * Senhas possíveis para a sequência de pares clicada: um dígito de cada par.
+     * As regras da senha pessoal (Senhas) são aplicadas durante a montagem, para que só
+     * as combinações que poderiam ser uma senha válida cheguem ao bcrypt:
+     *  - um ramo é cortado assim que repete o dígito anterior ("11");
+     *  - as combinações puramente sequenciais (12345678) são descartadas no fim.
+     * Quem chama deve apagar os arrays depois de usar.
+     *
+     * @param pares Pares de pares(), um por clique
+     * @return As candidatas, ou lista vazia se a quantidade de cliques não for de 8 a 10
+     */
+    public static List<char[]> candidatas(List<int[]> pares) {
+        List<char[]> resultado = new ArrayList<>();
+        if (pares == null || pares.size() < Senhas.TAMANHO_MINIMO || pares.size() > Senhas.TAMANHO_MAXIMO) {
+            return resultado;
+        }
+        char[] atual = new char[pares.size()];
+        montar(pares, 0, atual, resultado);
+        Arrays.fill(atual, '\0');
+        return resultado;
+    }
+
+    private static void montar(List<int[]> pares, int posicao, char[] atual, List<char[]> resultado) {
+        if (posicao == pares.size()) {
+            if (Senhas.formatoValido(atual)) {
+                resultado.add(atual.clone());
+            }
+            return;
+        }
+        for (int digito : pares.get(posicao)) {
+            if (digito < 0 || digito > 9) {
+                continue;
+            }
+            char c = (char) ('0' + digito);
+            if (posicao > 0 && !Senhas.vizinhosPermitidos(atual[posicao - 1], c)) {
+                continue;
+            }
+            atual[posicao] = c;
+            montar(pares, posicao + 1, atual, resultado);
+        }
+    }
+
+    /**
      * Embaralha 0 a 9 (Fisher-Yates) e distribui em 5 pares: cada dígito fica em exatamente um botão.
      */
     private void sortear() {

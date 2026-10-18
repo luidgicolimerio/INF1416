@@ -100,6 +100,58 @@ class TOTPTest {
         fail("Não foi possível testar dentro de um mesmo intervalo de 30 segundos.");
     }
 
+    /**
+     * Implementação de referência (RFC 4226), escrita só para o teste, com a API padrão do Java.
+     */
+    private static String codigoDeReferencia(byte[] chave, long intervalo) throws Exception {
+        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA1");
+        mac.init(new javax.crypto.spec.SecretKeySpec(chave, "HmacSHA1"));
+        byte[] h = mac.doFinal(java.nio.ByteBuffer.allocate(8).putLong(intervalo).array());
+        int o = h[19] & 0x0F;
+        int bin = ((h[o] & 0x7F) << 24) | ((h[o + 1] & 0xFF) << 16) | ((h[o + 2] & 0xFF) << 8) | (h[o + 3] & 0xFF);
+        return String.format("%06d", bin % 1_000_000);
+    }
+
+    @Test
+    void testIgualAImplementacaoDeReferencia() throws Exception {
+        java.util.Random aleatorio = new java.util.Random(2026);
+        cofre.model.auth.Base32 base32 = new cofre.model.auth.Base32(cofre.model.auth.Base32.Alphabet.BASE32, false, false);
+
+        for (int i = 0; i < 500; i++) {
+            byte[] chave = new byte[20];
+            aleatorio.nextBytes(chave);
+            long intervalo = Math.floorMod(aleatorio.nextLong(), 2_000_000_000L) / 30;
+
+            TOTP outro = new TOTP(base32.toString(chave), 30);
+            assertEquals(codigoDeReferencia(chave, intervalo), (String) totpCode.invoke(outro, intervalo),
+                    "Chave " + base32.toString(chave) + ", intervalo " + intervalo);
+        }
+    }
+
+    @Test
+    void testValidacaoNaoDependeDeTentativasAnteriores() throws Exception {
+        // validateCode não guarda estado: errar antes não muda o resultado do código certo
+        for (int tentativa = 0; tentativa < 3; tentativa++) {
+            long t = intervaloAtual();
+            String certo = codigoNoIntervalo(t);
+            String errado = codigoNoIntervalo(t + 5);
+
+            boolean primeira = totp.validateCode(certo);
+            totp.validateCode(errado);
+            totp.validateCode(errado);
+            boolean depoisDeErros = totp.validateCode(certo);
+            boolean repetida = totp.validateCode(certo);
+
+            if (t == intervaloAtual()) {
+                assertTrue(primeira, "O código certo deve ser aceito já na primeira validação.");
+                assertTrue(depoisDeErros);
+                assertTrue(repetida);
+                return;
+            }
+        }
+        fail("Não foi possível testar dentro de um mesmo intervalo de 30 segundos.");
+    }
+
     @Test
     void testEntradasInvalidas() {
         assertFalse(totp.validateCode(null));

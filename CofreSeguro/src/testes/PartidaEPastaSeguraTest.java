@@ -105,8 +105,8 @@ class PartidaEPastaSeguraTest {
                 PASTA_KEYS + "admin-pkcs8-aes.key",
                 "admin",
                 Grupo.ADMINISTRADOR,
-                "01234567".toCharArray(),
-                "01234567".toCharArray()
+                "13572468".toCharArray(),
+                "13572468".toCharArray()
         ), null);
         sessao.definirChavesAdmin(validadoAdmin.getChavePrivada(), validadoAdmin.getChavePublica());
         cadastro.efetivar(validadoAdmin, null);
@@ -197,8 +197,8 @@ class PartidaEPastaSeguraTest {
                 PASTA_KEYS + arqKey,
                 frase,
                 grupo,
-                "01234567".toCharArray(),
-                "01234567".toCharArray()
+                "13572468".toCharArray(),
+                "13572468".toCharArray()
         );
         CadastroValidado validado = cadastro.validar(dados, operador);
         String email = validado.getInfo().email();

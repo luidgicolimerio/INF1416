@@ -23,17 +23,42 @@ public final class Senhas {
 
     /**
      * Regra do enunciado: 8, 9 ou 10 dígitos de 0 a 9, sem sequências de números repetidos.
-     * Interpretação adotada: nenhum dígito pode aparecer mais de uma vez.
+     * Interpretação adotada:
+     *  - o mesmo dígito não pode aparecer duas vezes seguidas ("11" é proibido, "121" é permitido);
+     *  - a senha não pode ser puramente sequencial (ex: 12345678 ou 87654321).
      */
     public static boolean formatoValido(char[] senha) {
         if (senha == null || senha.length < TAMANHO_MINIMO || senha.length > TAMANHO_MAXIMO) {
             return false;
         }
-        boolean[] usado = new boolean[10];
-        for (char c : senha) {
-            if (c < '0' || c > '9') return false;
-            if (usado[c - '0']) return false;
-            usado[c - '0'] = true;
+        for (int i = 0; i < senha.length; i++) {
+            if (senha[i] < '0' || senha[i] > '9') return false;
+            if (i > 0 && !vizinhosPermitidos(senha[i - 1], senha[i])) return false;
+        }
+        return !puramenteSequencial(senha);
+    }
+
+    /**
+     * Dois dígitos podem aparecer lado a lado se forem diferentes.
+     * Usado também pelo TecladoVirtual para descartar combinações enquanto as monta.
+     */
+    public static boolean vizinhosPermitidos(char anterior, char atual) {
+        return anterior != atual;
+    }
+
+    /**
+     * Verdadeiro se cada dígito é o anterior + 1 (ex: 12345678) ou o anterior - 1 (ex: 87654321).
+     */
+    public static boolean puramenteSequencial(char[] senha) {
+        if (senha == null || senha.length < 2) {
+            return false;
+        }
+        int passo = senha[1] - senha[0];
+        if (passo != 1 && passo != -1) {
+            return false;
+        }
+        for (int i = 2; i < senha.length; i++) {
+            if (senha[i] - senha[i - 1] != passo) return false;
         }
         return true;
     }
