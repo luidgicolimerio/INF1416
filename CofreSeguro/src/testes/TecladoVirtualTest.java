@@ -1,4 +1,5 @@
 package testes;
+import cofre.model.auth.Senhas;
 import cofre.model.auth.TecladoVirtual;
 
 import java.lang.reflect.Field;
@@ -128,6 +129,78 @@ class TecladoVirtualTest {
         assertTrue(teclado.pares().isEmpty());
         for (int[] par : internos) assertArrayEquals(new int[] {0, 0}, par, "Os pares antigos devem ser zerados.");
         assertFalse(Arrays.deepEquals(layout, teclado.botoes()), "Limpar também re-sorteia.");
+    }
+
+    // --- Candidatas (senhas possíveis para os pares clicados) ---
+
+    private static List<int[]> repetir(int[] par, int vezes) {
+        List<int[]> pares = new ArrayList<>();
+        for (int i = 0; i < vezes; i++) pares.add(par);
+        return pares;
+    }
+
+    private static List<String> textos(List<char[]> candidatas) {
+        return candidatas.stream().map(String::new).sorted().toList();
+    }
+
+    @Test
+    void testCandidatasForaDoTamanho() {
+        assertTrue(TecladoVirtual.candidatas(repetir(new int[] {1, 2}, 7)).isEmpty(), "7 cliques não formam senha.");
+        assertTrue(TecladoVirtual.candidatas(repetir(new int[] {1, 2}, 11)).isEmpty(), "11 cliques não formam senha.");
+        assertTrue(TecladoVirtual.candidatas(null).isEmpty());
+    }
+
+    @Test
+    void testCandidatasCortamDigitoRepetidoEmSeguida() {
+        // 8 cliques no par {1,2}: das 256 combinações, só as alternadas não repetem o dígito anterior
+        List<char[]> candidatas = TecladoVirtual.candidatas(repetir(new int[] {1, 2}, 8));
+
+        assertEquals(List.of("12121212", "21212121"), textos(candidatas));
+    }
+
+    @Test
+    void testCandidatasDescartamSequenciaPura() {
+        // Pares {1,2},{2,3},...,{8,9}: escolher sempre o primeiro dá 12345678, sempre o segundo dá 23456789
+        List<int[]> pares = new ArrayList<>();
+        for (int d = 1; d <= 8; d++) pares.add(new int[] {d, d + 1});
+
+        List<String> candidatas = textos(TecladoVirtual.candidatas(pares));
+
+        assertFalse(candidatas.contains("12345678"), "Sequência crescente não é senha válida.");
+        assertFalse(candidatas.contains("23456789"));
+        assertTrue(candidatas.contains("12345679"), "Quase sequência (só o último quebra) continua na lista.");
+    }
+
+    @Test
+    void testTodasAsCandidatasSaoSenhasValidas() {
+        TecladoVirtual real = new TecladoVirtual();
+        for (int i = 0; i < 10; i++) real.pressionar(i % 5);
+
+        List<char[]> candidatas = TecladoVirtual.candidatas(real.pares());
+
+        assertTrue(candidatas.size() <= 1024, "No máximo 2^10 combinações.");
+        for (char[] c : candidatas) {
+            assertTrue(Senhas.formatoValido(c), "Candidata fora da regra: " + new String(c));
+        }
+    }
+
+    @Test
+    void testSenhaDigitadaEstaEntreAsCandidatas() {
+        String[] senhas = {"13572468", "12121212", "9090909090", "135724680"};
+        for (String senha : senhas) {
+            TecladoVirtual t = new TecladoVirtual();
+            for (char c : senha.toCharArray()) {
+                int[][] botoes = t.botoes();
+                for (int b = 0; b < botoes.length; b++) {
+                    if (botoes[b][0] == c - '0' || botoes[b][1] == c - '0') {
+                        t.pressionar(b);
+                        break;
+                    }
+                }
+            }
+            assertTrue(textos(TecladoVirtual.candidatas(t.pares())).contains(senha),
+                    "A senha realmente digitada nunca pode ser descartada: " + senha);
+        }
     }
 
     @Test

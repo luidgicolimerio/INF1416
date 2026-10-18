@@ -48,7 +48,8 @@ public class Cadastro {
         // 1. Senha pessoal: formato do enunciado e confirmação igual
         if (!Senhas.formatoValido(dados.senha())) {
             throw falha(Mid.SENHA_PESSOAL_INVALIDA, operador,
-                    "A senha pessoal deve ter 8, 9 ou 10 dígitos, sem repetir nenhum dígito.");
+                    "A senha pessoal deve ter 8, 9 ou 10 dígitos, sem o mesmo dígito duas vezes seguidas "
+                    + "e sem ser uma sequência como 12345678.");
         }
         if (!Arrays.equals(dados.senha(), dados.confirmacaoSenha())) {
             throw falha(Mid.SENHA_PESSOAL_INVALIDA, operador, "A senha e a confirmação não são iguais.");

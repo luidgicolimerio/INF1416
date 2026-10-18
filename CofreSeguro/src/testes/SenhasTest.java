@@ -15,9 +15,9 @@ class SenhasTest {
 
     @Test
     void testTamanhosAceitos() {
-        assertTrue(valida("13572468"), "8 dígitos distintos devem ser aceitos.");
-        assertTrue(valida("135724680"), "9 dígitos distintos devem ser aceitos.");
-        assertTrue(valida("0123456789"), "10 dígitos distintos devem ser aceitos.");
+        assertTrue(valida("13572468"), "8 dígitos devem ser aceitos.");
+        assertTrue(valida("135724680"), "9 dígitos devem ser aceitos.");
+        assertTrue(valida("1357924680"), "10 dígitos devem ser aceitos.");
     }
 
     @Test
@@ -36,11 +36,44 @@ class SenhasTest {
     }
 
     @Test
-    void testDigitosRepetidosRejeitados() {
+    void testDigitoRepetidoEmSeguidaRejeitado() {
         assertFalse(valida("11111111"), "Todos iguais.");
-        assertFalse(valida("11234567"), "Dígito repetido em seguida.");
-        assertFalse(valida("12121212"), "Bloco que se repete.");
-        assertFalse(valida("12345671"), "Dígito repetido separado.");
+        assertFalse(valida("11357246"), "Dígito repetido no início.");
+        assertFalse(valida("13572466"), "Dígito repetido no fim.");
+        assertFalse(valida("1357724680"), "Dígito repetido no meio.");
+    }
+
+    @Test
+    void testDigitoRepetidoSeparadoPermitido() {
+        assertTrue(valida("12121212"), "O mesmo dígito pode voltar se não estiver colado: 121 é permitido.");
+        assertTrue(valida("13572461"), "Dígito repetido separado é permitido.");
+        assertTrue(valida("9090909090"));
+    }
+
+    @Test
+    void testSequenciaPuraRejeitada() {
+        assertFalse(valida("12345678"), "Sequência crescente de 8.");
+        assertFalse(valida("23456789"));
+        assertFalse(valida("123456789"), "Sequência crescente de 9.");
+        assertFalse(valida("0123456789"), "Sequência crescente de 10.");
+        assertFalse(valida("87654321"), "Sequência decrescente.");
+        assertFalse(valida("9876543210"), "Sequência decrescente de 10.");
+    }
+
+    @Test
+    void testQuaseSequenciaPermitida() {
+        assertTrue(valida("12345679"), "Só o último dígito quebra a sequência.");
+        assertTrue(valida("21345678"), "Só o primeiro dígito quebra a sequência.");
+        assertTrue(valida("0123456798"), "Sequência com os dois últimos trocados.");
+        assertTrue(valida("12349678"), "Um dígito fora do lugar no meio.");
+    }
+
+    @Test
+    void testPuramenteSequencial() {
+        assertTrue(Senhas.puramenteSequencial("12345678".toCharArray()));
+        assertTrue(Senhas.puramenteSequencial("87654321".toCharArray()));
+        assertFalse(Senhas.puramenteSequencial("13572468".toCharArray()));
+        assertFalse(Senhas.puramenteSequencial("89012345".toCharArray()), "Não dá a volta de 9 para 0.");
     }
 
     @Test

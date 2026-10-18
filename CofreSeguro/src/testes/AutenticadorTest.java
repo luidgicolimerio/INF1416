@@ -160,10 +160,19 @@ class AutenticadorTest {
 
     @Test
     void testSenhaDe10Digitos() throws Exception {
-        criarUsuario("dez@inf1416.puc-rio.br", "0123456789");
+        criarUsuario("dez@inf1416.puc-rio.br", "1357924680");
         autenticador.etapa1("dez@inf1416.puc-rio.br");
 
-        assertEquals(Resultado.SUCESSO, autenticador.etapa2(clicar("0123456789")));
+        assertEquals(Resultado.SUCESSO, autenticador.etapa2(clicar("1357924680")));
+    }
+
+    @Test
+    void testSenhaComDigitoRepetidoSeparado() throws Exception {
+        // Regra nova: "121" é permitido (o mesmo dígito só não pode vir colado)
+        criarUsuario("repete@inf1416.puc-rio.br", "12121212");
+        autenticador.etapa1("repete@inf1416.puc-rio.br");
+
+        assertEquals(Resultado.SUCESSO, autenticador.etapa2(clicar("12121212")));
     }
 
     @Test
@@ -218,15 +227,16 @@ class AutenticadorTest {
 
     @Test
     void testDesempenhoDaEtapa2() throws Exception {
-        criarUsuario("dez@inf1416.puc-rio.br", "0123456789");
+        criarUsuario("dez@inf1416.puc-rio.br", "1357924680");
         autenticador.etapa1("dez@inf1416.puc-rio.br");
 
+        // Pior caso: senha errada de 10 dígitos, todas as candidatas passam pelo bcrypt
         long inicio = System.nanoTime();
-        autenticador.etapa2(clicar("9876543210"));
+        autenticador.etapa2(clicar("2468013579"));
         long ms = (System.nanoTime() - inicio) / 1_000_000;
 
         System.out.println("Etapa 2 com 10 cliques errados: " + ms + " ms");
-        assertTrue(ms < 3000, "A etapa 2 deve responder em menos de 3 s (levou " + ms + " ms).");
+        assertTrue(ms < 10000, "A etapa 2 deve responder em menos de 10 s (levou " + ms + " ms).");
     }
 
     // --- Etapa 3 ---
