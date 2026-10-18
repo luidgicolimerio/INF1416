@@ -1,8 +1,9 @@
 package testes;
-import cofre.GerenciadorDeChaves;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import cofre.model.cripto.GerenciadorDeChaves;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GerenciadorDeChavesTest {
@@ -100,7 +101,7 @@ class GerenciadorDeChavesTest {
         gerenciador.carregarChavePrivada(java.nio.file.Files.readAllBytes(
                 java.nio.file.Paths.get("src/Pacote-T3/Keys/admin-pkcs8-aes.key")), "admin");
 
-        assertTrue(new cofre.MotorCriptografico().validarParDeChaves(
+        assertTrue(new cofre.model.cripto.MotorCriptografico().validarParDeChaves(
                 gerenciador.getChavePrivada(), gerenciador.getChavePublica(), 2048));
     }
 

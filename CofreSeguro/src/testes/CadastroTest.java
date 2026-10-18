@@ -1,7 +1,7 @@
 package testes;
-import cofre.GerenciadorDeChaves;
 import cofre.model.auth.Autenticador;
 import cofre.model.auth.Autenticador.Resultado;
+import cofre.model.cripto.GerenciadorDeChaves;
 import cofre.model.auth.Cadastro;
 import cofre.model.auth.CadastroInvalidoException;
 import cofre.model.auth.CadastroValidado;

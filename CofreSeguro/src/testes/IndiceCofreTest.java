@@ -1,7 +1,7 @@
 package testes;
 
-import cofre.IndiceCofre;
-import cofre.IndiceCofre.MetadadosArquivo;
+import cofre.model.cripto.IndiceCofre;
+import cofre.model.cripto.IndiceCofre.MetadadosArquivo;
 import cofre.model.entidades.Grupo;
 import cofre.model.entidades.Usuario;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,7 @@
 package logview;
 
-import cofre.GerenciadorDeChaves;
-import cofre.MotorCriptografico;
+import cofre.model.cripto.GerenciadorDeChaves;
+import cofre.model.cripto.MotorCriptografico;
 import cofre.model.dados.BancoDeDados;
 import cofre.model.dados.ChaveiroDAO;
 import cofre.model.dados.EntradaChaveiro;

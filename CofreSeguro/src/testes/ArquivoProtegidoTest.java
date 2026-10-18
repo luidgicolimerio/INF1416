@@ -1,10 +1,11 @@
 package testes;
 
-import cofre.ArquivoProtegido;
-import cofre.GerenciadorDeChaves;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import cofre.model.cripto.ArquivoProtegido;
+import cofre.model.cripto.GerenciadorDeChaves;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArquivoProtegidoTest {

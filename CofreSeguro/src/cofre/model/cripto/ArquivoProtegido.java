@@ -1,4 +1,4 @@
-package cofre;
+package cofre.model.cripto;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -91,12 +91,14 @@ public class ArquivoProtegido {
      * @param pastaDestino Pasta onde o arquivo aberto será salvo
      * @param nomeSecreto Nome real do arquivo (ex: "nome1.doc") extraído do index
      */
-    public void salvarArquivoDecriptado(String pastaDestino, String nomeSecreto) throws Exception {
+    public Path salvarArquivoDecriptado(String pastaDestino, String nomeSecreto) throws Exception {
         if (this.conteudoDecriptado == null) {
             throw new IllegalStateException("Não há conteúdo decriptado para salvar.");
         }
-        Path caminhoSaida = Paths.get(pastaDestino, nomeSecreto);
+        Path nomeLimpo = Paths.get(nomeSecreto).getFileName();
+        Path caminhoSaida = Paths.get(pastaDestino).resolve(nomeLimpo);
         Files.write(caminhoSaida, this.conteudoDecriptado);
+        return caminhoSaida;
     }
 
     public byte[] getConteudoDecriptado() {

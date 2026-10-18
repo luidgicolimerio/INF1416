@@ -1,4 +1,4 @@
-package cofre;
+package cofre.model.cripto;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;

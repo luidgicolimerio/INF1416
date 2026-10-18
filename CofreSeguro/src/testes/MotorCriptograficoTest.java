@@ -1,10 +1,11 @@
 package testes;
 
-import cofre.GerenciadorDeChaves;
-import cofre.MotorCriptografico;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import cofre.model.cripto.GerenciadorDeChaves;
+import cofre.model.cripto.MotorCriptografico;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Files;

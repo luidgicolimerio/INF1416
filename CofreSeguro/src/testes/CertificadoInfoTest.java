@@ -1,6 +1,6 @@
 package testes;
-import cofre.GerenciadorDeChaves;
 import cofre.model.cripto.CertificadoInfo;
+import cofre.model.cripto.GerenciadorDeChaves;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,4 +1,4 @@
-package cofre;
+package cofre.model.cripto;
 
 import cofre.model.entidades.Usuario;
 

@@ -1,4 +1,4 @@
-package cofre;
+package cofre.model.cripto;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -41,6 +41,22 @@ public class MotorCriptografico {
     	javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding"); //[cite: 5, 6, 22]
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, chaveAES); //[cite: 22, 23]
         return cipher.doFinal(dadosCriptografados); //[cite: 22, 23]
+    }
+    
+    /**
+     * Encripta um array de bytes em texto plano utilizando o algoritmo simétrico
+     * AES no modo ECB com preenchimento PKCS5 (AES/ECB/PKCS5Padding).
+     * Utilizado, por exemplo, para cifrar a semente/chave TOTP do usuário no banco de dados.
+     *
+     * @param dados    Array de bytes em texto plano a ser cifrado.
+     * @param chaveAES Objeto {@link SecretKey} (256 bits) gerado via SHA1PRNG.
+     * @return Array de bytes contendo o criptograma resultante.
+     * @throws Exception Caso ocorra erro na inicialização da cifra ou no processamento dos blocos.
+     */
+    public byte[] encriptarAES(byte[] dados, SecretKey chaveAES) throws Exception {
+    	javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, chaveAES);
+        return cipher.doFinal(dados);
     }
     
     /**

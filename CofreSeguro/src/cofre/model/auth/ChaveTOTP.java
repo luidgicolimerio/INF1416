@@ -1,13 +1,12 @@
 package cofre.model.auth;
 
-import cofre.MotorCriptografico;
-
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+
+import cofre.model.cripto.MotorCriptografico;
 
 // Chave secreta do TOTP: geração (20 bytes em BASE32) e armazenamento cifrado com
 // AES/ECB/PKCS5Padding, chave AES de 256 bits gerada com SHA1PRNG a partir da senha pessoal.
@@ -39,10 +38,13 @@ public final class ChaveTOTP {
      * Cifra a chave em BASE32 para gravar em Usuarios.chave_totp.
      */
     public static byte[] cifrar(String base32, char[] senha) throws Exception {
-        // TODO: trocar por MotorCriptografico.encriptarAES quando o parceiro entregar (mesma transformação)
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, chaveDaSenha(senha));
-        return cipher.doFinal(base32.getBytes(StandardCharsets.US_ASCII));
+        cofre.model.cripto.MotorCriptografico motor = new cofre.model.cripto.MotorCriptografico();
+        
+        // A função chaveDaSenha(senha) já devolve a SecretKey AES gerada pela senha do usuário
+        javax.crypto.SecretKey chaveAES = chaveDaSenha(senha);
+        byte[] dados = base32.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        
+        return motor.encriptarAES(dados, chaveAES);
     }
 
     /**
