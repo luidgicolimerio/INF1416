@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.auth;
 
 // Etapa 1: o usuário existe, mas o acesso está bloqueado (log 2004).

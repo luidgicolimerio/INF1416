@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.dados;
 
 import java.io.IOException;

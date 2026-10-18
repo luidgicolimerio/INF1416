@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.auth;
 
 import java.nio.charset.StandardCharsets;

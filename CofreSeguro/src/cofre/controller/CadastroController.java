@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.controller;
 
 import cofre.model.auth.Autenticador;

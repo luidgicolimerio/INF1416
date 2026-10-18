@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.dados;
 
 // Falha de infraestrutura do banco (SQL inválido, arquivo inacessível etc.).

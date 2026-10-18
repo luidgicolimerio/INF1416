@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.dados;
 
 // Uma linha da tabela Chaveiro. Quem transforma em PrivateKey/X509Certificate é o GerenciadorDeChaves.

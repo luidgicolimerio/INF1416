@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.auth;
 
 // Classe fornecida no anexo do enunciado, transcrita sem alterações

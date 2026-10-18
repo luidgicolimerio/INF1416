@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.auth;
 
 // Falha na validação do formulário de cadastro. O formulário volta preenchido.

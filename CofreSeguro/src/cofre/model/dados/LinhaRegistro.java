@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.dados;
 
 // Um registro já juntado com o texto de Mensagens e o login de Usuarios (leitura do logView).

@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package logview;
 
 import cofre.model.cripto.GerenciadorDeChaves;

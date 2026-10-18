@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package testes;
 import cofre.model.entidades.Grupo;
 import cofre.model.entidades.Sessao;

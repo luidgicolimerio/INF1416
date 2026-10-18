@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package testes;
 import cofre.model.dados.BancoDeDados;
 import cofre.model.dados.BancoDeDadosException;

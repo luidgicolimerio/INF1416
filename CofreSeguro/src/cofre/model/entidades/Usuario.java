@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package cofre.model.entidades;
 
 // Espelho de uma linha da tabela Usuarios. Quem cria é o UsuarioDAO.

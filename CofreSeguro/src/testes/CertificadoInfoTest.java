@@ -1,3 +1,10 @@
+/*
+ * Integrantes
+ *
+ * * Luidgi Colimerio
+ * * Matheus Figueiredo
+ */
+
 package testes;
 import cofre.model.cripto.CertificadoInfo;
 import cofre.model.cripto.GerenciadorDeChaves;
